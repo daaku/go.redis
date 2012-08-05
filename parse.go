@@ -2,44 +2,27 @@ package redis
 
 import (
 	"errors"
-	"io"
-	"log"
-	"strconv"
-
 	"github.com/daaku/go.redis/bufin"
+	"io"
+	"strconv"
 )
 
-var (
-	debug       = false
-	ErrProtocol = errors.New("go.redis: protocol error")
-)
+var ErrProtocol = errors.New("go.redis: protocol error")
 
 func (r *Reply) parseErr(res []byte) {
 	r.Err = errors.New(string(res))
-
-	if debug {
-		log.Println("-ERR: " + string(res))
-	}
 }
 
 func (r *Reply) parseStr(res []byte) {
 	b := make([]byte, len(res))
 	copy(b, res)
 	r.Elem = b
-
-	if debug {
-		log.Println("-STR: " + string(res))
-	}
 }
 
 func (r *Reply) parseInt(res []byte) {
 	b := make([]byte, len(res))
 	copy(b, res)
 	r.Elem = b
-
-	if debug {
-		log.Println("-INT: " + string(res))
-	}
 }
 
 func (r *Reply) parseBulk(buf *bufin.Reader, res []byte) {
@@ -50,10 +33,6 @@ func (r *Reply) parseBulk(buf *bufin.Reader, res []byte) {
 	}
 
 	if l == -1 {
-		if debug {
-			log.Println("-BULK: Key does not exist")
-		}
-
 		return
 	}
 
@@ -73,10 +52,6 @@ func (r *Reply) parseBulk(buf *bufin.Reader, res []byte) {
 
 	l -= 2
 	r.Elem = data[:l]
-
-	if debug {
-		log.Printf("-BULK: read %d byte, bulk-data %q\n", l, data)
-	}
 }
 
 func (r *Reply) parseMultiBulk(buf *bufin.Reader, res []byte) {
@@ -101,10 +76,6 @@ func (r *Reply) parseMultiBulk(buf *bufin.Reader, res []byte) {
 
 	// buffer is reduced to account for `nil` value returns
 	r.Elems = r.Elems[:l]
-
-	if debug {
-		//log.Printf(": %d == %d %q\n", l, len(r.Elems), r.Elems)
-	}
 }
 
 func Parse(buf *bufin.Reader) *Reply {
