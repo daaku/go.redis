@@ -65,7 +65,7 @@ func (r *Reply) parseMultiBulk(buf *bufin.Reader, res []byte) {
 	r.Elems = make([]*Reply, l)
 
 	for i := 0; i < l; i++ {
-		rr := Parse(buf)
+		rr := parse(buf)
 
 		if rr.Err != nil {
 			r.Err = rr.Err
@@ -78,7 +78,7 @@ func (r *Reply) parseMultiBulk(buf *bufin.Reader, res []byte) {
 	r.Elems = r.Elems[:l]
 }
 
-func Parse(buf *bufin.Reader) *Reply {
+func parse(buf *bufin.Reader) *Reply {
 	r := new(Reply)
 	res, err := buf.ReadSlice(lf)
 

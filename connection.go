@@ -73,7 +73,7 @@ func NewConn(addr, proto string, db int, password string) (Conn, error) {
 }
 
 func (c *connection) Read() (*Reply, error) {
-	reply := Parse(c.rbuf)
+	reply := parse(c.rbuf)
 	if reply.Err != nil {
 		return nil, reply.Err
 	}
