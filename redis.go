@@ -130,17 +130,6 @@ type AsyncClient struct {
 	queued int
 }
 
-// NewAsyncClient expects a addr like "tcp:127.0.0.1:6379"
-// It returns a new *Client.
-func NewAsyncClient(addr string, db int, password string, max int) *AsyncClient {
-	return &AsyncClient{
-		NewClient(addr, db, password, max),
-		bytes.NewBuffer(make([]byte, 0, 1024*16)),
-		nil,
-		0,
-	}
-}
-
 // Call appends a command to the write buffer or returns an error.
 func (ac *AsyncClient) Call(args ...interface{}) (err error) {
 	_, err = ac.buf.Write(format(args...))
