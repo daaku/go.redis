@@ -32,57 +32,57 @@ type Conn struct {
 // interface. It's easy to use this interface to create your own
 // redis client or to simply talk to the redis database. 
 func NewConn(addr, proto string, db int, password string) (*Conn, error) {
-    conn, err := net.Dial(proto, addr)
+	conn, err := net.Dial(proto, addr)
 
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    ConnSum++
-    c := &Conn{bufin.NewReader(conn), conn}
+	ConnSum++
+	c := &Conn{bufin.NewReader(conn), conn}
 
-    if password != "" {
-        e := c.Write("AUTH", password)
+	if password != "" {
+		e := c.Write("AUTH", password)
 
-        if e != nil {
-            return nil, e
-        }
+		if e != nil {
+			return nil, e
+		}
 
-        _, e = c.Read()
+		_, e = c.Read()
 
-        if e != nil {
-            return nil, e
-        }
-    }
+		if e != nil {
+			return nil, e
+		}
+	}
 
-    if db != 0 {
-        e := c.Write("SELECT", db)
+	if db != 0 {
+		e := c.Write("SELECT", db)
 
-        if e != nil {
-            return nil, e
-        }
+		if e != nil {
+			return nil, e
+		}
 
-        _, e = c.Read()
+		_, e = c.Read()
 
-        if e != nil {
-            return nil, e
-        }
-    }
+		if e != nil {
+			return nil, e
+		}
+	}
 
-    return c, nil
+	return c, nil
 }
 
 // Read reads one reply of the socket connection. If there is no reply waiting
 // this method will block.
 // Returns either an error or a pointer to a Reply object.
 func (c *Conn) Read() (*Reply, error) {
-    reply := Parse(c.rbuf)
+	reply := Parse(c.rbuf)
 
-    if reply.Err != nil {
-        return nil, reply.Err
-    }
+	if reply.Err != nil {
+		return nil, reply.Err
+	}
 
-    return reply, nil
+	return reply, nil
 }
 
 // Write accepts any redis command and arbitrary list of arguments.

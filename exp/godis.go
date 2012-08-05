@@ -57,98 +57,98 @@
 package redis
 
 import (
-    "bytes"
-    "strings"
+	"bytes"
+	"strings"
 )
 
 // Client implements a Redis client which handles connections to the database
 // in a pool. The size of the pool can be adjusted with by setting the
 // MaxConnections variable before creating a client.
 type Client struct {
-    Addr     string
-    Proto    string
-    Db       int
-    Password string
-    pool     *connPool
+	Addr     string
+	Proto    string
+	Db       int
+	Password string
+	pool     *connPool
 }
 
 // NewClient expects a addr like "tcp:127.0.0.1:6379"
 // It returns a new *Client.
 func NewClient(addr string, db int, password string) *Client {
-    if addr == "" {
-        addr = "tcp:127.0.0.1:6379"
-    }
+	if addr == "" {
+		addr = "tcp:127.0.0.1:6379"
+	}
 
-    na := strings.SplitN(addr, ":", 2)
-    return &Client{na[1], na[0], db, password, newConnPool()}
+	na := strings.SplitN(addr, ":", 2)
+	return &Client{na[1], na[0], db, password, newConnPool()}
 }
 
 // Call is the canonical way of talking to Redis. It accepts any 
 // Redis command and a arbitrary number of arguments.
 // Call returns a Reply object or an error.
 func (c *Client) Call(args ...interface{}) (*Reply, error) {
-    conn, err := c.connect()
-    defer c.pool.push(conn)
+	conn, err := c.connect()
+	defer c.pool.push(conn)
 
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    conn.Write(args...)
+	conn.Write(args...)
 
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    return conn.Read()
+	return conn.Read()
 }
 
 // Pop a connection from pool 
 func (c *Client) connect() (conn Connection, err error) {
-    conn = c.pool.pop()
+	conn = c.pool.pop()
 
-    if conn == nil {
-        conn, err = NewConn(c.Addr, c.Proto, c.Db, c.Password)
+	if conn == nil {
+		conn, err = NewConn(c.Addr, c.Proto, c.Db, c.Password)
 
-        if err != nil {
-            return nil, err
-        }
-    }
+		if err != nil {
+			return nil, err
+		}
+	}
 
-    return conn, nil
+	return conn, nil
 }
 
 // Use the connection settings from Client to create a new AsyncClient
 func (c *Client) AsyncClient() *AsyncClient {
-    return &AsyncClient{c, bytes.NewBuffer(make([]byte, 0, 1024*16)), nil, 0}
+	return &AsyncClient{c, bytes.NewBuffer(make([]byte, 0, 1024*16)), nil, 0}
 }
 
 // Async client implements an asynchronous client. It is very similar to Client
 // except that it maintains a buffer of commands which first are sent to Redis
 // once we explicitly request a reply.
 type AsyncClient struct {
-    *Client
-    buf    *bytes.Buffer
-    conn   Connection
-    queued int
+	*Client
+	buf    *bytes.Buffer
+	conn   Connection
+	queued int
 }
 
 // NewAsyncClient expects a addr like "tcp:127.0.0.1:6379"
 // It returns a new *Client.
 func NewAsyncClient(addr string, db int, password string) *AsyncClient {
-    return &AsyncClient{
-        NewClient(addr, db, password),
-        bytes.NewBuffer(make([]byte, 0, 1024*16)),
-        nil,
-        0,
-    }
+	return &AsyncClient{
+		NewClient(addr, db, password),
+		bytes.NewBuffer(make([]byte, 0, 1024*16)),
+		nil,
+		0,
+	}
 }
 
 // Call appends a command to the write buffer or returns an error.
 func (ac *AsyncClient) Call(args ...interface{}) (err error) {
-    _, err = ac.buf.Write(format(args...))
-    ac.queued++
-    return err
+	_, err = ac.buf.Write(format(args...))
+	ac.queued++
+	return err
 }
 
 // Read does three things. 
@@ -159,52 +159,52 @@ func (ac *AsyncClient) Call(args ...interface{}) (err error) {
 //
 // Read returns a Reply or error.
 func (ac *AsyncClient) Read() (*Reply, error) {
-    if ac.conn == nil {
-        conn, e := NewConn(ac.Addr, ac.Proto, ac.Db, ac.Password)
+	if ac.conn == nil {
+		conn, e := NewConn(ac.Addr, ac.Proto, ac.Db, ac.Password)
 
-        if e != nil {
-            return nil, e
-        }
+		if e != nil {
+			return nil, e
+		}
 
-        ac.conn = conn
-    }
+		ac.conn = conn
+	}
 
-    if ac.buf.Len() > 0 {
-        _, err := ac.buf.WriteTo(ac.conn.Sock())
+	if ac.buf.Len() > 0 {
+		_, err := ac.buf.WriteTo(ac.conn.Sock())
 
-        if err != nil {
-            return nil, err
-        }
-    }
+		if err != nil {
+			return nil, err
+		}
+	}
 
-    reply, e := ac.conn.Read()
-    ac.queued--
-    return reply, e
+	reply, e := ac.conn.Read()
+	ac.queued--
+	return reply, e
 }
 
 func (ac *AsyncClient) Queued() int {
-    return ac.queued
+	return ac.queued
 }
 
 func (ac *AsyncClient) ReadAll() ([]*Reply, error) {
-    replies := make([]*Reply, 0, ac.queued)
+	replies := make([]*Reply, 0, ac.queued)
 
-    for ac.Queued() > 0 {
-        r, e := ac.Read()
+	for ac.Queued() > 0 {
+		r, e := ac.Read()
 
-        if e != nil {
-            return nil, e
-        }
+		if e != nil {
+			return nil, e
+		}
 
-        replies = append(replies, r)
-    }
+		replies = append(replies, r)
+	}
 
-    return replies, nil
+	return replies, nil
 }
 
 // The AsyncClient will only open one connection. This is not automatically
 // closed, so to close it we need to call this method.
 func (ac *AsyncClient) Close() {
-    ac.conn.Close()
-    ac.conn = nil
+	ac.conn.Close()
+	ac.conn = nil
 }

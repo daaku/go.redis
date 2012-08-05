@@ -1,90 +1,90 @@
 package redis
 
 import (
-    "bytes"
-    "strconv"
-    "testing"
+	"bytes"
+	"strconv"
+	"testing"
 )
 
 func error_(t *testing.T, name string, expected, got interface{}, err error) {
-    if err != nil {
-        t.Errorf("`%s` expected `%v` got `%v`, err(%v)", name, expected, got, err.Error())
-    } else {
-        t.Errorf("`%s` expected `%v` got `%v`, err(%v)", name, expected, got, err)
-    }
+	if err != nil {
+		t.Errorf("`%s` expected `%v` got `%v`, err(%v)", name, expected, got, err.Error())
+	} else {
+		t.Errorf("`%s` expected `%v` got `%v`, err(%v)", name, expected, got, err)
+	}
 }
 
 func TestClient(t *testing.T) {
-    c := NewClient("", 0, "")
+	c := NewClient("", 0, "")
 
-    if _, err := c.Call("SET", "foo", "foo"); err != nil {
-        t.Fatal(err.Error())
-    }
+	if _, err := c.Call("SET", "foo", "foo"); err != nil {
+		t.Fatal(err.Error())
+	}
 
-    p := c.AsyncClient()
-    p.Call("MULTI")
-    p.Call("GET", "foo")
-    p.Call("EXEC")
+	p := c.AsyncClient()
+	p.Call("MULTI")
+	p.Call("GET", "foo")
+	p.Call("EXEC")
 
-    res, err := p.Read()
+	res, err := p.Read()
 
-    if err != nil || string(res.Elem) != "OK" {
-        t.Fatal(err.Error())
-    }
+	if err != nil || string(res.Elem) != "OK" {
+		t.Fatal(err.Error())
+	}
 
-    res, err = p.Read()
+	res, err = p.Read()
 
-    if err != nil || string(res.Elem) != "QUEUED" {
-        error_(t, "pipe", "foo", string(res.Elem), err)
-    }
+	if err != nil || string(res.Elem) != "QUEUED" {
+		error_(t, "pipe", "foo", string(res.Elem), err)
+	}
 
-    res, err = p.Read()
+	res, err = p.Read()
 
-    if err != nil || len(res.Elems) != 1 {
-        error_(t, "exec", 1, len(res.Elems), err)
-    } else {
-        println(string(res.Elems[0].Elem))
-    }
+	if err != nil || len(res.Elems) != 1 {
+		error_(t, "exec", 1, len(res.Elems), err)
+	} else {
+		println(string(res.Elems[0].Elem))
+	}
 }
 
 func BenchmarkItoa(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        strconv.Itoa(i)
-    }
+	for i := 0; i < b.N; i++ {
+		strconv.Itoa(i)
+	}
 }
 
 func BenchmarkSet(b *testing.B) {
-    c := NewClient("", 0, "")
+	c := NewClient("", 0, "")
 
-    for i := 0; i < b.N; i++ {
-        c.Call("SET", "foo", "foo")
-    }
+	for i := 0; i < b.N; i++ {
+		c.Call("SET", "foo", "foo")
+	}
 }
 
 func BenchmarkAppendUint(b *testing.B) {
-    var buf []byte
-    buf = make([]byte, 0, 1024*16)
+	var buf []byte
+	buf = make([]byte, 0, 1024*16)
 
-    for i := 0; i < b.N; i++ {
-        strconv.AppendUint(buf, uint64(i), 10)
-    }
+	for i := 0; i < b.N; i++ {
+		strconv.AppendUint(buf, uint64(i), 10)
+	}
 }
 
 func BenchmarkAppendBytes(b *testing.B) {
-    var buf []byte
-    buf = make([]byte, 0, 1024*16)
+	var buf []byte
+	buf = make([]byte, 0, 1024*16)
 
-    for i := 0; i < b.N; i++ {
-        buf = append(buf, '\r')
-    }
+	for i := 0; i < b.N; i++ {
+		buf = append(buf, '\r')
+	}
 }
 
 func BenchmarkAppendBuffer(b *testing.B) {
-    buf := bytes.NewBuffer(make([]byte, 1024*16))
+	buf := bytes.NewBuffer(make([]byte, 1024*16))
 
-    for i := 0; i < b.N; i++ {
-        buf.WriteByte('\r')
-    }
+	for i := 0; i < b.N; i++ {
+		buf.WriteByte('\r')
+	}
 }
 
 //package redis
