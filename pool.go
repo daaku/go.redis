@@ -1,18 +1,14 @@
 package redis
 
-var MaxConnections = 50
-
 type connPool struct {
 	free chan Connection
 }
 
-func newConnPool() *connPool {
-	p := connPool{make(chan Connection, MaxConnections)}
-
-	for i := 0; i < MaxConnections; i++ {
+func newConnPool(max int) *connPool {
+	p := connPool{make(chan Connection, max)}
+	for i := 0; i < max; i++ {
 		p.free <- nil
 	}
-
 	return &p
 }
 

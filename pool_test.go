@@ -6,9 +6,10 @@ import (
 )
 
 func TestPool(t *testing.T) {
-	p := newConnPool()
+	max := 50
+	p := newConnPool(max)
 
-	for i := int(MaxConnections) + 1; i >= 0; i-- {
+	for i := int(max) + 1; i >= 0; i-- {
 		c := p.pop()
 
 		go func() {

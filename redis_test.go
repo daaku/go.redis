@@ -15,7 +15,7 @@ func error_(t *testing.T, name string, expected, got interface{}, err error) {
 }
 
 func TestClient(t *testing.T) {
-	c := NewClient("", 0, "")
+	c := NewClient("", 0, "", 50)
 
 	if _, err := c.Call("SET", "foo", "foo"); err != nil {
 		t.Fatal(err.Error())
@@ -54,7 +54,7 @@ func BenchmarkItoa(b *testing.B) {
 }
 
 func BenchmarkSet(b *testing.B) {
-	c := NewClient("", 0, "")
+	c := NewClient("", 0, "", 50)
 
 	for i := 0; i < b.N; i++ {
 		c.Call("SET", "foo", "foo")

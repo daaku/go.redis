@@ -1,6 +1,6 @@
-// Package redis implements a db client for Redis.
+// Package redis implements a client for Redis.
 //
-// Connection interface
+// Connection
 //
 // The Connection interface is a very simple interface to Redis. The Conn
 // struct implements this interface and can be used to write commands and read
@@ -13,16 +13,15 @@
 // Client
 //
 // The Client implements one method; Call(). This writes your command to the
-// database, then reads the subsequent reply and returns it to you. 
+// server, then reads the subsequent reply and returns it to you. 
 //
 // The Client struct also has a pool of connections so it's safe to use a
 // client in a concurrent context. You can create one client for your entire
 // program and share it between go routines.
 //
-//      c := redis.NewClient("tcp:127.0.0.1:6379")
-//      reply, e := c.Call("GET", "foo")
-//
-//      if e != nil {
+//      c := redis.NewClient("tcp:127.0.0.1:6379", 0, "")
+//      reply, err := c.Call("GET", "foo")
+//      if err != nil {
 //          // handle error
 //      }
 //
@@ -35,8 +34,8 @@
 // error or nil. 
 //
 //      c := redis.NewAsyncClient("tcp:127.0.0.1:6379")
-//      c.Call("SET", "foo", 1)
-//      c.Call("GET", "foo")
+//      err := c.Call("SET", "foo", 1)
+//      err = c.Call("GET", "foo")
 //
 // When we send our command and arguments to the Call() method nothing is sent
 // to the Redis server. To get the reply for our commands from Redis we use the
@@ -50,7 +49,7 @@
 //      // reply from GET
 //      reply, _ = c.Read()
 //
-//      println(reply.Elem.Int()) // prints 1
+//      fmt.Println(reply.Elem.Int())
 // 
 // Due to the nature of how the AsyncClient works, it's not safe to share it
 // between go routines.
@@ -72,49 +71,47 @@ type Client struct {
 	pool     *connPool
 }
 
-// NewClient expects a addr like "tcp:127.0.0.1:6379"
-// It returns a new *Client.
-func NewClient(addr string, db int, password string) *Client {
+// Create a new Client to connect to redis. addr must be like
+// "tcp:127.0.0.1:6379".
+func NewClient(addr string, db int, password string, max int) *Client {
 	if addr == "" {
 		addr = "tcp:127.0.0.1:6379"
 	}
-
 	na := strings.SplitN(addr, ":", 2)
-	return &Client{na[1], na[0], db, password, newConnPool()}
+	return &Client{
+		Proto:    na[0],
+		Addr:     na[1],
+		Db:       db,
+		Password: password,
+		pool:     newConnPool(max),
+	}
 }
 
 // Call is the canonical way of talking to Redis. It accepts any 
 // Redis command and a arbitrary number of arguments.
-// Call returns a Reply object or an error.
 func (c *Client) Call(args ...interface{}) (*Reply, error) {
 	conn, err := c.connect()
 	defer c.pool.push(conn)
-
 	if err != nil {
 		return nil, err
 	}
 
-	conn.Write(args...)
-
+	err = conn.Write(args...)
 	if err != nil {
 		return nil, err
 	}
-
 	return conn.Read()
 }
 
 // Pop a connection from pool 
 func (c *Client) connect() (conn Connection, err error) {
 	conn = c.pool.pop()
-
 	if conn == nil {
 		conn, err = NewConn(c.Addr, c.Proto, c.Db, c.Password)
-
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	return conn, nil
 }
 
@@ -135,9 +132,9 @@ type AsyncClient struct {
 
 // NewAsyncClient expects a addr like "tcp:127.0.0.1:6379"
 // It returns a new *Client.
-func NewAsyncClient(addr string, db int, password string) *AsyncClient {
+func NewAsyncClient(addr string, db int, password string, max int) *AsyncClient {
 	return &AsyncClient{
-		NewClient(addr, db, password),
+		NewClient(addr, db, password, max),
 		bytes.NewBuffer(make([]byte, 0, 1024*16)),
 		nil,
 		0,
