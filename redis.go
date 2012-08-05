@@ -1,15 +1,5 @@
 // Package redis implements a client for Redis.
 //
-// Connection
-//
-// The Connection interface is a very simple interface to Redis. The Conn
-// struct implements this interface and can be used to write commands and read
-// replies from Redis.
-//
-// The Connection interface is used to implement the Client and AsyncClient.
-// Unless you like to implment your own client, use either of them instead of a
-// single connection.
-//
 // Client
 //
 // The Client implements one method; Call(). This writes your command to the
