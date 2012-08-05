@@ -94,7 +94,7 @@ func (c *Client) Call(args ...interface{}) (*Reply, error) {
 }
 
 // Pop a connection from pool 
-func (c *Client) connect() (conn Connection, err error) {
+func (c *Client) connect() (conn Conn, err error) {
 	conn = c.pool.pop()
 	if conn == nil {
 		conn, err = NewConn(c.Addr, c.Proto, c.Db, c.Password)
@@ -116,7 +116,7 @@ func (c *Client) AsyncClient() *AsyncClient {
 type AsyncClient struct {
 	*Client
 	buf    *bytes.Buffer
-	conn   Connection
+	conn   Conn
 	queued int
 }
 

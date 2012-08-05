@@ -8,7 +8,7 @@ import (
 // Represents a single Connection to the server and abstracts the
 // read/write via the connection. Unless you're implementing your own
 // client, you should use the Client interface.
-type Connection interface {
+type Conn interface {
 	// Write accepts any redis command and arbitrary list of arguments.
 	//
 	//     Write("SET", "counter", 1)
@@ -43,7 +43,7 @@ type connection struct {
 // or for a unix domain socket
 //
 //     NewConn("/path/to/redis.sock", "unix")
-func NewConn(addr, proto string, db int, password string) (Connection, error) {
+func NewConn(addr, proto string, db int, password string) (Conn, error) {
 	conn, err := net.Dial(proto, addr)
 	if err != nil {
 		return nil, err
