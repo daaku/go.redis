@@ -8,7 +8,7 @@ import (
 
 // Client implements a Redis client which handles connections to the
 // database in a pool. You can create one client for your entire program
-// and share it between go routines.
+// and share it between goroutines.
 type Client struct {
 	Addr     string
 	Proto    string
@@ -92,7 +92,7 @@ func (c *Client) AsyncClient() *AsyncClient {
 //      fmt.Println(reply.Elem.Int())
 //
 // Due to the nature of how the AsyncClient works, it's not safe to share it
-// between go routines.
+// between goroutines.
 type AsyncClient struct {
 	*Client
 	buf    *bytes.Buffer
