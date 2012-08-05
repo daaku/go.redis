@@ -6,12 +6,12 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/daaku/godis/bufin"
+	"github.com/daaku/go.redis/bufin"
 )
 
 var (
 	debug       = false
-	ErrProtocol = errors.New("godis: protocol error")
+	ErrProtocol = errors.New("go.redis: protocol error")
 )
 
 func (r *Reply) parseErr(res []byte) {

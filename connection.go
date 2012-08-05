@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/daaku/godis/bufin"
+	"github.com/daaku/go.redis/bufin"
 	"net"
 )
 
