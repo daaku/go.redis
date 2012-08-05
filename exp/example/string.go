@@ -1,19 +1,19 @@
 package main
 
 import (
-    "github.com/simonz05/godis/exp"
+	"github.com/daaku/godis/exp"
 )
 
 func main() {
-    c := redis.NewClient("tcp:127.0.0.1:6379")
+	c := redis.NewClient("tcp:127.0.0.1:6379")
 
-    res, err := c.Call("SET", "foo", "bar")
+	res, err := c.Call("SET", "foo", "bar")
 
-    if err != nil {
-        println(err.Error())
-        return
-    }
+	if err != nil {
+		println(err.Error())
+		return
+	}
 
-    res, _ = c.Call("GET", "foo")
-    println("GET foo:", res.Elem.String())
+	res, _ = c.Call("GET", "foo")
+	println("GET foo:", res.Elem.String())
 }

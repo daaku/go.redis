@@ -1,23 +1,23 @@
 package redis
 
 import (
-    "github.com/simonz05/godis/bufin"
-    "net"
+	"github.com/daaku/godis/bufin"
+	"net"
 )
 
 var ConnSum = 0
 
 type Connection interface {
-    Write(args ...interface{}) error
-    Read() (*Reply, error)
-    Close() error
-    Sock() net.Conn
+	Write(args ...interface{}) error
+	Read() (*Reply, error)
+	Close() error
+	Sock() net.Conn
 }
 
 // Conn implements the Connection interface. 
 type Conn struct {
-    rbuf *bufin.Reader
-    c    net.Conn
+	rbuf *bufin.Reader
+	c    net.Conn
 }
 
 // NewConn expects a network address and protocol.
@@ -92,18 +92,18 @@ func (c *Conn) Read() (*Reply, error) {
 //
 // Write might return a net.Conn.Write error
 func (c *Conn) Write(args ...interface{}) error {
-    _, e := c.c.Write(format(args...))
+	_, e := c.c.Write(format(args...))
 
-    if e != nil {
-        return e
-    }
+	if e != nil {
+		return e
+	}
 
-    return nil
+	return nil
 }
 
 // Close is a simple helper method to close socket connection.
 func (c *Conn) Close() error {
-    return c.c.Close()
+	return c.c.Close()
 }
 
 // Sock returns the underlying net.Conn. You can use this connection as you
@@ -111,5 +111,5 @@ func (c *Conn) Close() error {
 //
 //      Sock().SetDeadline(t) 
 func (c *Conn) Sock() net.Conn {
-    return c.c
+	return c.c
 }
