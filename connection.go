@@ -33,7 +33,7 @@ type Conn interface {
 
 type connection struct {
 	rbuf *bufin.Reader
-	c    net.Conn
+	conn net.Conn
 }
 
 // NewConn expects a network address and protocol.
@@ -81,7 +81,7 @@ func (c *connection) Read() (*Reply, error) {
 }
 
 func (c *connection) Write(args ...interface{}) error {
-	_, err := c.c.Write(format(args...))
+	_, err := c.conn.Write(format(args...))
 	if err != nil {
 		return err
 	}
@@ -89,9 +89,9 @@ func (c *connection) Write(args ...interface{}) error {
 }
 
 func (c *connection) Close() error {
-	return c.c.Close()
+	return c.conn.Close()
 }
 
 func (c *connection) Sock() net.Conn {
-	return c.c
+	return c.conn
 }
