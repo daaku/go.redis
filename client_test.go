@@ -29,8 +29,14 @@ func BenchmarkItoa(b *testing.B) {
 }
 
 func BenchmarkSet(b *testing.B) {
+	b.StopTimer()
 	server, client := NewServerClient(b)
-	defer server.Close()
+	b.StartTimer()
+	defer func() {
+		b.StopTimer()
+		server.Close()
+		b.StartTimer()
+	}()
 	for i := 0; i < b.N; i++ {
 		client.Call("SET", "foo", "foo")
 	}
