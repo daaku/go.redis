@@ -3,7 +3,9 @@ package redis_test
 import (
 	"bytes"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 )
 
 func error_(t *testing.T, name string, expected, got interface{}, err error) {
@@ -19,6 +21,19 @@ func TestClient(t *testing.T) {
 	defer server.Close()
 	if _, err := client.Call("SET", "foo", "foo"); err != nil {
 		t.Fatal(err.Error())
+	}
+}
+
+func TestTimeout(t *testing.T) {
+	server, client := NewServerClient(t)
+	defer server.Close()
+	client.Timeout = time.Nanosecond
+	_, err := client.Call("SET", "foo", "foo")
+	if err == nil {
+		t.Fatal("was expecting timeout error but got no error. redis too fast?")
+	}
+	if !strings.HasSuffix(err.Error(), "i/o timeout") {
+		t.Fatalf("was expecting timeout error but got: %s", err)
 	}
 }
 
