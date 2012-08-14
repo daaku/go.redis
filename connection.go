@@ -3,11 +3,11 @@ package redis
 import (
 	"github.com/daaku/go.redis/bufin"
 	"net"
+	"time"
 )
 
-// Represents a single Connection to the server and abstracts the
-// read/write via the connection. Unless you're implementing your own
-// client, you should use the Client interface.
+// Represents a Connection to the server and abstracts the read/write
+// via a connection.
 type Conn interface {
 	// Write accepts any redis command and arbitrary list of arguments.
 	//
@@ -17,7 +17,7 @@ type Conn interface {
 	// Write might return a net.Conn.Write error
 	Write(args ...interface{}) error
 
-	// Read reads one reply of the socket connection. If there is no reply waiting
+	// Read a single reply from the connection. If there is no reply waiting
 	// this method will block.
 	Read() (*Reply, error)
 
@@ -27,7 +27,7 @@ type Conn interface {
 	// Returns the underlying net.Conn. This is useful for example to set
 	// set a r/w deadline on the connection.
 	//
-	//      Sock().SetDeadline(t)
+	//      conn.Sock().SetDeadline(t)
 	Sock() net.Conn
 }
 
@@ -36,39 +36,19 @@ type connection struct {
 	conn net.Conn
 }
 
-// NewConn expects a network address and protocol.
+// Dial expects a network address and protocol.
 //
-//     NewConn("127.0.0.1:6379", "tcp")
+//     Dial("127.0.0.1:6379", "tcp")
 //
 // or for a unix domain socket
 //
-//     NewConn("/path/to/redis.sock", "unix")
-func NewConn(addr, proto string, db int, password string) (Conn, error) {
-	conn, err := net.Dial(proto, addr)
+//     Dial("/path/to/redis.sock", "unix")
+func Dial(addr, proto string, timeout time.Duration) (Conn, error) {
+	conn, err := net.DialTimeout(proto, addr, timeout)
 	if err != nil {
 		return nil, err
 	}
 	c := &connection{bufin.NewReader(conn), conn}
-	if password != "" {
-		err := c.Write("AUTH", password)
-		if err != nil {
-			return nil, err
-		}
-		_, err = c.Read()
-		if err != nil {
-			return nil, err
-		}
-	}
-	if db != 0 {
-		err := c.Write("SELECT", db)
-		if err != nil {
-			return nil, err
-		}
-		_, err = c.Read()
-		if err != nil {
-			return nil, err
-		}
-	}
 	return c, nil
 }
 

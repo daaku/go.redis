@@ -43,9 +43,8 @@ func arglen(arg []byte) int {
 	return 1 + intlen(len(arg)) + 2 + len(arg) + 2
 }
 
-/* Build a new command by concencate an array 
- * of bytes which create a redis command.
- * Returns a byte array */
+// Build a new command by concencating an array of bytes which create a
+// redis command.
 func formatArgs(args [][]byte) []byte {
 	//   *   args count         \r\n
 	n := 1 + intlen(len(args)) + 2
@@ -70,9 +69,8 @@ func formatArgs(args [][]byte) []byte {
 	return buf
 }
 
-/* Build a new command by concencate an array 
- * of strings which create a redis command.
- * Returns a byte array */
+// Build a new command by concencate an array of strings which create
+// a redis command.
 func format(args ...interface{}) []byte {
 	buf := make([][]byte, len(args))
 
