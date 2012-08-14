@@ -36,13 +36,13 @@ type connection struct {
 	conn net.Conn
 }
 
-// Dial expects a network address and protocol.
+// Dial expects a network address, protocol and a dial timeout:
 //
-//     Dial("127.0.0.1:6379", "tcp")
+//     Dial("127.0.0.1:6379", "tcp", time.Second)
 //
-// or for a unix domain socket
+// Or for a unix domain socket:
 //
-//     Dial("/path/to/redis.sock", "unix")
+//     Dial("/path/to/redis.sock", "unix", time.Second)
 func Dial(addr, proto string, timeout time.Duration) (Conn, error) {
 	conn, err := net.DialTimeout(proto, addr, timeout)
 	if err != nil {

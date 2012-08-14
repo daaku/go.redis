@@ -2,19 +2,21 @@
 package redis
 
 import (
+	"errors"
 	"github.com/daaku/go.stats"
 	"time"
 )
 
+var errPoolSizeNotSpecified = errors.New("redis client pool size not specified")
+
 // Client implements a Redis connection which is what you should
-// typically use instead of the lower level Conn interface.
-//
-// * Connection Pooling
-// * Timeouts
+// typically use instead of the lower level Conn interface. It
+// implements a fixed size connection pool and supports a per-call
+// timeout.
 type Client struct {
-	Addr     string
-	Proto    string
-	PoolSize uint
+	Addr     string // "127.0.0.1:6379" or "/run/redis.sock"
+	Proto    string // "tcp" or "unix"
+	PoolSize uint   // Must be specified.
 	Timeout  time.Duration
 	pool     chan Conn
 }
@@ -57,6 +59,9 @@ func (c *Client) Call(args ...interface{}) (*Reply, error) {
 // Pop a connection from the pool or create a fresh one.
 func (c *Client) connect() (conn Conn, err error) {
 	if c.pool == nil {
+		if c.PoolSize == 0 {
+			return nil, errPoolSizeNotSpecified
+		}
 		c.pool = make(chan Conn, c.PoolSize)
 		go func() {
 			var i uint
