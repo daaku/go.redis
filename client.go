@@ -43,15 +43,15 @@ func (c *Client) Call(args ...interface{}) (*Reply, error) {
 		return nil, err
 	}
 	err = conn.Write(args...)
-	stats.Record("redis write", float64(time.Since(start).Nanoseconds()))
+	stats.Record("redis connection write", float64(time.Since(start).Nanoseconds()))
 	if err != nil {
-		stats.Inc("redis write error")
+		stats.Inc("redis connection write error")
 		return nil, err
 	}
 	reply, err := conn.Read()
-	stats.Record("redis read", float64(time.Since(start).Nanoseconds()))
+	stats.Record("redis connection read", float64(time.Since(start).Nanoseconds()))
 	if err != nil {
-		stats.Inc("redis read error")
+		stats.Inc("redis connection read error")
 	}
 	return reply, err
 }
@@ -72,7 +72,7 @@ func (c *Client) connect() (conn Conn, err error) {
 	}
 	conn = <-c.pool
 	if conn == nil {
-		stats.Inc("new redis connection")
+		stats.Inc("redis connection new")
 		conn, err = Dial(c.Addr, c.Proto, c.Timeout)
 		if err != nil {
 			return nil, err
