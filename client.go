@@ -4,6 +4,7 @@ package redis
 import (
 	"errors"
 	"github.com/daaku/go.stats"
+	"strings"
 	"time"
 )
 
@@ -11,7 +12,7 @@ var errPoolSizeNotSpecified = errors.New("redis client pool size not specified")
 
 // Client implements a Redis connection which is what you should
 // typically use instead of the lower level Conn interface. It
-// implements a fixed size connection pool and supports a per-call
+// implements a fixed size connection, supports per-call
 // timeout.
 type Client struct {
 	Addr     string // "127.0.0.1:6379" or "/run/redis.sock"
@@ -23,7 +24,7 @@ type Client struct {
 
 // Call is the canonical way of talking to Redis. It accepts any
 // Redis command and a arbitrary number of arguments.
-func (c *Client) Call(args ...interface{}) (*Reply, error) {
+func (c *Client) Call(args ...interface{}) (reply *Reply, err error) {
 	start := time.Now()
 	conn, err := c.connect()
 	stats.Record(
@@ -31,6 +32,11 @@ func (c *Client) Call(args ...interface{}) (*Reply, error) {
 	defer func() {
 		stats.Record(
 			"redis connection release", float64(time.Since(start).Nanoseconds()))
+		if err != nil && c.shouldClose(err) {
+			stats.Inc("redis connection error close")
+			conn.Close()
+			conn = nil
+		}
 		c.pool <- conn
 	}()
 	if err != nil {
@@ -48,7 +54,7 @@ func (c *Client) Call(args ...interface{}) (*Reply, error) {
 		stats.Inc("redis connection write error")
 		return nil, err
 	}
-	reply, err := conn.Read()
+	reply, err = conn.Read()
 	stats.Record("redis connection read", float64(time.Since(start).Nanoseconds()))
 	if err != nil {
 		stats.Inc("redis connection read error")
@@ -79,4 +85,12 @@ func (c *Client) connect() (conn Conn, err error) {
 		}
 	}
 	return conn, err
+}
+
+// Check if an error deserves closing the connection.
+func (c *Client) shouldClose(err error) bool {
+	if strings.HasSuffix(err.Error(), "broken pipe") {
+		return true
+	}
+	return false
 }
