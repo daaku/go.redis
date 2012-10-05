@@ -3,12 +3,16 @@ package redis
 
 import (
 	"errors"
-	"github.com/daaku/go.stats"
 	"strings"
 	"time"
 )
 
 var errPoolSizeNotSpecified = errors.New("redis client pool size not specified")
+
+type Stats interface {
+	Inc(name string)
+	Record(name string, value float64)
+}
 
 // Client implements a Redis connection which is what you should
 // typically use instead of the lower level Conn interface. It
@@ -19,7 +23,20 @@ type Client struct {
 	Proto    string // "tcp" or "unix"
 	PoolSize uint   // Must be specified.
 	Timeout  time.Duration
+	Stats    Stats // stats collection
 	pool     chan Conn
+}
+
+func (c *Client) inc(name string) {
+	if c.Stats != nil {
+		c.Stats.Inc(name)
+	}
+}
+
+func (c *Client) record(name string, value float64) {
+	if c.Stats != nil {
+		c.Stats.Record(name, value)
+	}
 }
 
 // Call is the canonical way of talking to Redis. It accepts any
@@ -27,37 +44,37 @@ type Client struct {
 func (c *Client) Call(args ...interface{}) (reply *Reply, err error) {
 	start := time.Now()
 	conn, err := c.connect()
-	stats.Record(
+	c.record(
 		"redis connection acquire", float64(time.Since(start).Nanoseconds()))
 	defer func() {
-		stats.Record(
+		c.record(
 			"redis connection release", float64(time.Since(start).Nanoseconds()))
 		if err != nil && c.shouldClose(err) {
-			stats.Inc("redis connection error close")
+			c.inc("redis connection error close")
 			conn.Close()
 			conn = nil
 		}
 		c.pool <- conn
 	}()
 	if err != nil {
-		stats.Inc("redis connection accquire error")
+		c.inc("redis connection accquire error")
 		return nil, err
 	}
 	err = conn.Sock().SetDeadline(start.Add(c.Timeout))
 	if err != nil {
-		stats.Inc("redis connection set deadline error")
+		c.inc("redis connection set deadline error")
 		return nil, err
 	}
 	err = conn.Write(args...)
-	stats.Record("redis connection write", float64(time.Since(start).Nanoseconds()))
+	c.record("redis connection write", float64(time.Since(start).Nanoseconds()))
 	if err != nil {
-		stats.Inc("redis connection write error")
+		c.inc("redis connection write error")
 		return nil, err
 	}
 	reply, err = conn.Read()
-	stats.Record("redis connection read", float64(time.Since(start).Nanoseconds()))
+	c.record("redis connection read", float64(time.Since(start).Nanoseconds()))
 	if err != nil {
-		stats.Inc("redis connection read error")
+		c.inc("redis connection read error")
 	}
 	return reply, err
 }
@@ -78,7 +95,7 @@ func (c *Client) connect() (conn Conn, err error) {
 	}
 	conn = <-c.pool
 	if conn == nil {
-		stats.Inc("redis connection new")
+		c.inc("redis connection new")
 		conn, err = Dial(c.Addr, c.Proto, c.Timeout)
 		if err != nil {
 			return nil, err
