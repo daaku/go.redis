@@ -1,7 +1,7 @@
 // package bufin implements a partially static buffed input reader. It is very
-// similar to the standard library bufio.Reader so that is almost always 
+// similar to the standard library bufio.Reader so that is almost always
 // prefered over the following package. bufin is implemented to track and have
-// full control over reading data from a socket. It's used internally by the 
+// full control over reading data from a socket. It's used internally by the
 // exp redis client.
 package bufin
 
@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 )
 
 const IOBUFLEN = 1024
@@ -95,7 +94,7 @@ func (b *Reader) Incr(n int) int {
 	return n
 }
 
-// either reads from the static buffer or if len(p) > len(buf), 
+// either reads from the static buffer or if len(p) > len(buf),
 // read len(p) bytes from socket directly into p
 func (b *Reader) Read(p []byte) (n int, e error) {
 	n = len(p)
@@ -107,13 +106,11 @@ func (b *Reader) Read(p []byte) (n int, e error) {
 	if b.w == b.r {
 		// read request is larger then current window size
 		if n >= len(b.buf[b.w:IOBUFLEN]) {
-			//log.Println("Read directly from IO")
 			n, e = b.rd.Read(p)
 			b.reads++
 			return n, e
 		}
 
-		log.Println("End of buffer")
 		if e = b.fill(); e != nil {
 			return 0, e
 		}
