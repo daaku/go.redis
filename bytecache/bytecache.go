@@ -27,7 +27,8 @@ func (c *Cache) Get(key string) ([]byte, error) {
 	item, err := c.client.Call("GET", key)
 	if err != nil {
 		return nil, err
-	} else if !item.Nil() {
+	}
+	if !item.Nil() {
 		return item.Elem.Bytes(), nil
 	}
 	return nil, nil
