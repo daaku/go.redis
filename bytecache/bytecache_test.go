@@ -51,3 +51,22 @@ func TestDeadClient(t *testing.T) {
 		t.Fatal("was expecting error")
 	}
 }
+
+func TestExpires(t *testing.T) {
+	server, client := redistest.NewServerClient(t)
+	defer server.Close()
+	cache := bytecache.New(client)
+	const key = "key"
+	expected := []byte("data")
+	if err := cache.Store(key, expected, time.Millisecond); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(3 * time.Millisecond)
+	actual, err := cache.Get(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actual != nil {
+		t.Fatalf("found %s instead of nil", actual)
+	}
+}
