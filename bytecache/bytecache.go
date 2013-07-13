@@ -20,7 +20,7 @@ func New(client *redis.Client) *Cache {
 func (c *Cache) Store(key string, value []byte, timeout time.Duration) error {
 	args := []interface{}{"SET", key, value}
 	if timeout != 0 {
-		args = append(args, "PX", uint(timeout.Nanoseconds()/int64(time.Millisecond)))
+		args = append(args, "PX", uint64(timeout.Nanoseconds()/int64(time.Millisecond)))
 	}
 	_, err := c.client.Call(args...)
 	return err
