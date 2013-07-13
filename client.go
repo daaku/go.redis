@@ -14,16 +14,15 @@ type Stats interface {
 	Record(name string, value float64)
 }
 
-// Client implements a Redis connection which is what you should
-// typically use instead of the lower level Conn interface. It
-// implements a fixed size connection, supports per-call
-// timeout.
+// Client implements a Redis connection which is what you should typically use
+// instead of the lower level Conn interface. It implements a fixed size
+// connection pool and supports per-call timeout.
 type Client struct {
-	Addr     string // "127.0.0.1:6379" or "/run/redis.sock"
-	Proto    string // "tcp" or "unix"
-	PoolSize uint   // Must be specified.
-	Timeout  time.Duration
-	Stats    Stats // stats collection
+	Addr     string        // Server Address like "127.0.0.1:6379" or "/run/redis.sock"
+	Proto    string        // Server Protocol like "tcp" or "unix"
+	PoolSize uint          // Connection Pool Size, must be specified
+	Timeout  time.Duration // Timeout per call
+	Stats    Stats         // For Stats collection
 	pool     chan Conn
 }
 

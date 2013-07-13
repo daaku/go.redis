@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// Define a Client via flag parameters. For example if name is
-// "redis", it will provide:
+// Define a Client via flag parameters. For example if name is "redis", it will
+// provide:
 //
 //     -redis.proto=unix
 //     -redis.addr=/run/redis.sock
