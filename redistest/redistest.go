@@ -1,14 +1,17 @@
-package redis_test
+// Package redistest provides test redis server support. It provides a real
+// in-memory redis server.
+package redistest
 
 import (
 	"fmt"
-	"github.com/daaku/go.freeport"
-	"github.com/daaku/go.redis"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/daaku/go.freeport"
+	"github.com/daaku/go.redis"
 )
 
 type Server struct {

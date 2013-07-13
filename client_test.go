@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/daaku/go.redis/redistest"
 )
 
 func error_(t *testing.T, name string, expected, got interface{}, err error) {
@@ -17,7 +19,7 @@ func error_(t *testing.T, name string, expected, got interface{}, err error) {
 }
 
 func TestClient(t *testing.T) {
-	server, client := NewServerClient(t)
+	server, client := redistest.NewServerClient(t)
 	defer server.Close()
 	if _, err := client.Call("SET", "foo", "foo"); err != nil {
 		t.Fatal(err.Error())
@@ -25,7 +27,7 @@ func TestClient(t *testing.T) {
 }
 
 func TestTimeout(t *testing.T) {
-	server, client := NewServerClient(t)
+	server, client := redistest.NewServerClient(t)
 	defer server.Close()
 	client.Timeout = time.Nanosecond
 	_, err := client.Call("SET", "foo", "foo")
@@ -45,7 +47,7 @@ func BenchmarkItoa(b *testing.B) {
 
 func BenchmarkSet(b *testing.B) {
 	b.StopTimer()
-	server, client := NewServerClient(b)
+	server, client := redistest.NewServerClient(b)
 	b.StartTimer()
 	defer func() {
 		b.StopTimer()
