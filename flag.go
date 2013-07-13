@@ -18,21 +18,25 @@ func ClientFlag(name string) *Client {
 		&client.Proto,
 		name+".proto",
 		"tcp",
-		name+" redis proto")
+		name+" proto",
+	)
 	flag.StringVar(
 		&client.Addr,
 		name+".addr",
 		"127.0.0.1:6379",
-		name+" redis addr")
+		name+" addr",
+	)
 	flag.UintVar(
 		&client.PoolSize,
 		name+".pool-size",
 		50,
-		name+" redis connection pool size")
+		name+" connection pool size",
+	)
 	flag.DurationVar(
 		&client.Timeout,
 		name+".timeout",
 		time.Second,
-		name+" redis per call timeout")
+		name+" per call timeout",
+	)
 	return client
 }
