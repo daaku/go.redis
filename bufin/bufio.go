@@ -174,6 +174,4 @@ func (b *Reader) ReadSlice(delim byte) (line []byte, err error) {
 			return line, err
 		}
 	}
-
-	panic("never")
 }
