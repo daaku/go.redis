@@ -80,7 +80,7 @@ func (s *Server) Start() error {
 		return err
 	}
 	go io.Copy(os.Stderr, stderr)
-	_, err = fmt.Fprintf(in, "port %d", s.Port)
+	_, err = fmt.Fprintf(in, "port %d\nbind 127.0.0.1", s.Port)
 	if err != nil {
 		return err
 	}
