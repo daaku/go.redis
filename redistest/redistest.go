@@ -14,6 +14,8 @@ import (
 	"github.com/daaku/go.redis"
 )
 
+const maxConnectTries = 1000
+
 type Server struct {
 	Command *exec.Cmd
 	Port    int
@@ -48,12 +50,18 @@ func NewServerClient(t Fatalf) (*Server, *redis.Client) {
 		PoolSize: 10,
 		Timeout:  time.Millisecond * 100,
 	}
+	try := 0
 	for {
 		_, err := client.Call("PING")
 		if err == nil {
 			break
 		}
+		try++
 		if strings.HasSuffix(err.Error(), "connection refused") {
+			if try > maxConnectTries {
+				t.Fatalf("err %s", err)
+			}
+			time.Sleep(1 * time.Millisecond)
 			continue
 		}
 		t.Fatalf("err %s", err)
