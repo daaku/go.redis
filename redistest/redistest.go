@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ParsePlatform/go.freeport"
 	"github.com/daaku/go.redis"
+	"github.com/facebookgo/freeport"
 )
 
 type Server struct {
