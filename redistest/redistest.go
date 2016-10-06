@@ -14,6 +14,8 @@ import (
 	"github.com/facebookgo/freeport"
 )
 
+const maxConnectTries = 1000
+
 type Server struct {
 	Command *exec.Cmd
 	Port    int
@@ -48,12 +50,18 @@ func NewServerClient(t Fatalf) (*Server, *redis.Client) {
 		PoolSize: 10,
 		Timeout:  time.Millisecond * 100,
 	}
+	try := 0
 	for {
 		_, err := client.Call("PING")
 		if err == nil {
 			break
 		}
+		try++
 		if strings.HasSuffix(err.Error(), "connection refused") {
+			if try > maxConnectTries {
+				t.Fatalf("err %s", err)
+			}
+			time.Sleep(1 * time.Millisecond)
 			continue
 		}
 		t.Fatalf("err %s", err)
@@ -80,7 +88,7 @@ func (s *Server) Start() error {
 		return err
 	}
 	go io.Copy(os.Stderr, stderr)
-	_, err = fmt.Fprintf(in, "port %d", s.Port)
+	_, err = fmt.Fprintf(in, "port %d\nbind 127.0.0.1", s.Port)
 	if err != nil {
 		return err
 	}
